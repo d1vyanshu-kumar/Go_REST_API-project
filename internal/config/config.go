@@ -10,7 +10,7 @@ import (
 
 // and the http_server part is nested so we are going to create a another struct for that
 type HTTPServer struct { // private struct
-	Addr string
+	Addr string    `yaml:"address" env-required:"true"` // yaml tag is used to map the yaml key to struct field
 }
 // env-default:"production
 // struct tax

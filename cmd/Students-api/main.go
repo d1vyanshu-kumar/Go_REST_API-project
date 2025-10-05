@@ -1,9 +1,82 @@
 package main
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
+	"github.com/d1vyanshu-kumar/students-api/internal/config"
+)
 
+// setup coustome logger and we are going to use inbuilt log package so we dont need to setup any coustome logger
 func main() {
-	// This is just a placeholder main function.
-	fmt.Println("Students API service is starting...")
+	// load config
+	
+	// database setup
+	// setup router
+	// setup server
+
+	// here is the first step we need to load the config
+
+	cfg := config.MustLoad()
+
+	// setup router
+
+	router := http.NewServeMux()
+
+	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("welcome to students api"))
+	})
+	 
+	// setup server
+
+	server := http.Server{
+		Addr:cfg.Addr,
+		Handler: router,
+
+	}
+
+	slog.Info("server started on port 8082", slog.String("addr", cfg.Addr))
+
+
+	// make a channel before starting the server and the value is store inside this channel that will be a signal and its signal of Operating system.
+
+	done := make(chan os.Signal, 1) // this is a buffere channel thus the size will be 1.
+
+	// now we only need to find a way to how to send a signal to the above done channel so the it will gracefully shutdown the server.
+	// channel -> pipeline and as we know  it is going to use to communicate between different goroutines. so here we go:
+
+    signal.Notify(done, os.Interrupt, syscall.SIGINT,syscall.SIGTERM) // this will notify the done channel when we get an interrupt signal from the operating system. 
+
+	go func() {
+		err := server.ListenAndServe()
+	if err != nil {
+		fmt.Println("failed to start server:", err.Error())
+	}
+	}()
+	
+	<- done // this will block the main thread until we get any signal from the operating system and now after this now from here we can gracefully shutdown the server.
+
+	// now we can shutdown the server gracefully.
+	// before that we are going to log first and sLog which is the structured Log
+
+	slog.Info("server is shutting down...")
+
+	// now look some time server is going to hang so for this we need no crate a timeout context. and give it a specific time limit. if it is not going to shout down then it will going to give us a report.
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err := server.Shutdown(ctx)
+
+	if err != nil {
+		slog.Error("failed to shutdown server", slog.String("error", err.Error()))
+	}
+
+	slog.Info("server stopped sucessfully")
+		
 }
