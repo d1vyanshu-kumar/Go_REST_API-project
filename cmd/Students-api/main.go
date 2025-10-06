@@ -12,25 +12,35 @@ import (
 
 	"github.com/d1vyanshu-kumar/students-api/internal/config"
 	student "github.com/d1vyanshu-kumar/students-api/internal/http/handlers/students"
+	"github.com/d1vyanshu-kumar/students-api/internal/storage/sqlite"
 )
 
 // setup coustome logger and we are going to use inbuilt log package so we dont need to setup any coustome logger
 func main() {
 	// load config
-	
-	// database setup
-	// setup router
-	// setup server
-
 	// here is the first step we need to load the config
 
 	cfg := config.MustLoad()
+
+	// database setup
+	
+
+	storage, er:= sqlite.New(cfg)
+
+	if er != nil {
+		fmt.Println(er)
+		return
+	}
+
+	slog.Info("database connected", slog.String("env", cfg.Env), slog.String("version", "1.0.0")) // we are using structured log here
+
+	
 
 	// setup router
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("POST /api/students", student.New()) // we make plural because we are going to have multiple students.
+	router.HandleFunc("POST /api/students", student.New(storage)) // we make plural because we are going to have multiple students.
 	// and in near future if we want to add a new dependecy  we can inject here inside a new function.
 	 
 	// setup server

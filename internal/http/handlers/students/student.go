@@ -7,13 +7,16 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/d1vyanshu-kumar/students-api/internal/storage"
 	"github.com/d1vyanshu-kumar/students-api/internal/types"
 	"github.com/d1vyanshu-kumar/students-api/internal/utils/response"
 	"github.com/go-playground/validator/v10"
 )
 
 // and in near future if we want to add a new dependecy  we can inject here inside a new function.
-func New() http.HandlerFunc {
+// this is time where we are going to inject the storage dependency here so that we can use it inside the handler function to store the student data in the database.
+// and here are are gving the interface type not the concrete type because we want to follow the dependency inversion principle.
+func New(storage storage.Storage) http.HandlerFunc { // now go and pass into the main.go file
 	return  func(w http.ResponseWriter, r *http.Request) {
 
 		slog.Info("creating a student")
@@ -42,9 +45,17 @@ func New() http.HandlerFunc {
 			return
 		}
 
+		lastID, err := storage.CreateStudent(student.Name, student.Email, student.Age) // now we can use the storage dependency here to store the student data in the database.
+
+		slog.Info("student created", slog.Int64("id", lastID))
+		if err != nil {
+			response.WriteJSON(w, http.StatusInternalServerError, err) // 500 status code database error
+			return
+		}
+
 		// write some dummy data to the response
-		response.WriteJSON(w, http.StatusCreated, map[string]string{
-			"message": "student created successfully",
+		response.WriteJSON(w, http.StatusCreated, map[string]int64{
+			"ID": lastID,
 		 })
 	}
 
