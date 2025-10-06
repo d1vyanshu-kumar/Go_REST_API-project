@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/d1vyanshu-kumar/students-api/internal/config"
+	student "github.com/d1vyanshu-kumar/students-api/internal/http/handlers/students"
 )
 
 // setup coustome logger and we are going to use inbuilt log package so we dont need to setup any coustome logger
@@ -29,9 +30,8 @@ func main() {
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("welcome to students api"))
-	})
+	router.HandleFunc("POST /api/students", student.New()) // we make plural because we are going to have multiple students.
+	// and in near future if we want to add a new dependecy  we can inject here inside a new function.
 	 
 	// setup server
 
