@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/d1vyanshu-kumar/students-api/internal/storage"
 	"github.com/d1vyanshu-kumar/students-api/internal/types"
@@ -57,6 +58,38 @@ func New(storage storage.Storage) http.HandlerFunc { // now go and pass into the
 		response.WriteJSON(w, http.StatusCreated, map[string]int64{
 			"ID": lastID,
 		 })
+	}
+
+}
+
+// for getting the student by ID we need to create a new handler function
+func GetByID(storage storage.Storage) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		// we are going to get the ID from the URL path in go there is inbuilt servemux we are going to use here:
+
+		id := r.PathValue("id") // this is going to return the string value of the ID from the URL path.
+		slog.Info("getting a student by ID", slog.String("ID", id))
+
+	 // now we need to a method over storage to get the student.
+
+	 intId, err := strconv.ParseInt(id, 10, 64)
+
+	 if err != nil {
+		response.WriteJSON(w, http.StatusBadRequest, response.GeneralError(err))
+		return
+	 }
+	  student, err := storage.GetStudentByID(intId)
+
+	  if err != nil {
+		slog.Error("error getting user", slog.String("id", id))
+		response.WriteJSON(w, http.StatusInternalServerError, response.GeneralError(err))
+		return
+	  }
+
+	  response.WriteJSON(w, http.StatusOK, student)
+
 	}
 
 }

@@ -43,6 +43,9 @@ func main() {
 	router.HandleFunc("POST /api/students", student.New(storage)) // we make plural because we are going to have multiple students.
 	// and in near future if we want to add a new dependecy  we can inject here inside a new function.
 	 
+	// here we are going to configure new routes for the recieving the data using the ID.
+
+	router.HandleFunc("GET /api/students/{id}", student.GetByID(storage)) // here we are going to get the student by ID.
 	// setup server
 
 	server := http.Server{
