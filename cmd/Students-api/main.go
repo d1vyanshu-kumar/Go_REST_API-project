@@ -46,6 +46,10 @@ func main() {
 	// here we are going to configure new routes for the recieving the data using the ID.
 
 	router.HandleFunc("GET /api/students/{id}", student.GetByID(storage)) // here we are going to get the student by ID.
+
+	// and here we go again what we are doing now is to steup a new router for getting the list of the students.
+	// its simple:
+	router.HandleFunc("GET /api/students", student.GetList(storage))
 	// setup server
 
 	server := http.Server{

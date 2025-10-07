@@ -9,9 +9,19 @@ import (
 	_ "github.com/mattn/go-sqlite3" // sqlite driver, we are using this underhood thus we are using blank identifier. remember that
 )
 
+// This is a struct definition in Go - think of it as a blueprint for creating objects that can interact with SQLite databases.
+// This creates a custom type called SQLite that wraps around Go's built-in database connection. It's like creating a container that holds a database connection.
+
 type SQLite struct {
 	Db *sql.DB
 }
+
+// Why is this here?
+// Encapsulation & Organization: Instead of passing around raw *sql.DB connections everywhere, you create a clean wrapper. This allows you to:
+
+// Add methods specific to your SQLite operations
+// Keep database logic organized in one place
+// Make your code more readable and maintainable
 
 func New(cfg *config.Config) (*SQLite, error) {
 
@@ -107,4 +117,37 @@ func (s *SQLite) GetStudentByID(id int64) (types.Student, error) {
 
 	return student, nil
 
+}
+
+func (s *SQLite) GetStudents() ([]types.Student, error) { // we need to connect that shit with that database
+
+	stmt, err := s.Db.Prepare("SELECT id, name, email, age FROM students")
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare query: %w", err)
+	}
+
+	defer stmt.Close()
+
+	rows, err := stmt.Query()
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query: %w", err)
+	}
+
+	defer rows.Close()
+
+	var students []types.Student
+
+	// rows is a list so we need to execute the loop here
+
+	for rows.Next() {
+		var student types.Student
+		if err := rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+		students = append(students, student)
+	}
+
+	return students, nil
 }

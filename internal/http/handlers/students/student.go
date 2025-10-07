@@ -93,3 +93,25 @@ func GetByID(storage storage.Storage) http.HandlerFunc {
 	}
 
 }
+
+
+func GetList(storage storage.Storage) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		// so we need to write some logic here to get the list of the students from the database.
+
+		slog.Info("getting list of students")
+
+		storages, err := storage.GetStudents()
+
+		if err != nil {
+			slog.Error("error getting list of students", slog.String("error", err.Error()))
+			response.WriteJSON(w, http.StatusInternalServerError, response.GeneralError(err))
+			return
+		}
+
+		// and this write json method is going to write/ encode the json response to the client.
+		response.WriteJSON(w, http.StatusOK, storages)
+	}
+
+}
